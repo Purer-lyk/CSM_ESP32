@@ -370,9 +370,11 @@ void sendTCPBemfa(const String &msg){
 }
 
 void connectBemfa(){
+  Serial.println("connecting bemfa tcp");
   if(bemfaclient.connect(TCP_SERVER_ADDR, TCP_SERVER_PORT)){
     String tcpHeader = "";
     tcpHeader = "cmd=1&uid=" + TCP_UID + "&topic=" + topic + "\r\n";
+    Serial.println(tcpHeader);
     sendTCPBemfa(tcpHeader);
     preConnected = true;
     bemfaclient.setNoDelay(true); 
