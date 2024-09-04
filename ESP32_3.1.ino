@@ -308,40 +308,6 @@ String curr_string = "";
 bool preConnected = false;
 unsigned long preStart = millis();
 
-void sendTCPBemfa(const String &msg){
-  checkBemfa();
-  bemfaclient.print(msg);
-  Serial.println(msg);
-}
-
-void connectBemfa(){
-  if(bemfaclient.connect(TCP_SERVER_ADDR, TCP_SERVER_PORT)){
-    String tcpHeader = "";
-    tcpHeader = "cmd=1&uid=" + TCP_UID + "&topic=" + topic + "\r\n";
-    sendTCPBemfa(tcpHeader);
-    preConnected = true;
-    bemfaclient.setNoDelay(true); 
-  }
-  else{
-    bemfaclient.stop();
-    preConnected = false;
-  }
-  preStart = millis();
-}
-
-void checkBemfa(){
-  while(!bemfaclient.connected()){
-    delay(500);
-    Serial.println("client disconnect");
-    if(preConnected == true){
-      preConnected = false;
-      preStart = millis();
-      bemfaclient.stop();
-    }
-    else if(millis() - preStart > 1000) connectBemfa();
-  }
-}
-
 // VOUT() used to heat sensor
 void VOUT(){
   unsigned char dataH, dataL;
@@ -395,6 +361,53 @@ void detec_ad(){
     data3[detc_cnt] = det_sensor(3);
     data4[detc_cnt] = det_sensor(4);
     detc_cnt++;
+}
+
+void sendTCPBemfa(const String &msg){
+  checkBemfa();
+  bemfaclient.print(msg);
+  Serial.println(msg);
+}
+
+void connectBemfa(){
+  if(bemfaclient.connect(TCP_SERVER_ADDR, TCP_SERVER_PORT)){
+    String tcpHeader = "";
+    tcpHeader = "cmd=1&uid=" + TCP_UID + "&topic=" + topic + "\r\n";
+    sendTCPBemfa(tcpHeader);
+    preConnected = true;
+    bemfaclient.setNoDelay(true); 
+  }
+  else{
+    bemfaclient.stop();
+    preConnected = false;
+  }
+  preStart = millis();
+}
+
+void connectHttp(){
+  WiFi.begin(ssid, password);
+  WiFi.config(staticIP, gateway, subnet);
+
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+  }
+  Serial.println(" CONNECTED");
+  
+  server.begin();
+}
+
+void checkBemfa(){
+  while(!bemfaclient.connected()){
+    delay(500);
+    Serial.println("client disconnect");
+    if(preConnected == true){
+      preConnected = false;
+      preStart = millis();
+      bemfaclient.stop();
+    }
+    else if(millis() - preStart > 1000) connectBemfa();
+  }
 }
 
 void bemfaCallback(){
@@ -480,18 +493,8 @@ void setup()
   digitalWrite(LED2, LOW);
 
   Vadj.attach_ms(2,VOUT);  // loop VOUT+4 operator for every 2 millisecond
-  
-  WiFi.begin(ssid, password);
-  WiFi.config(staticIP, gateway, subnet);
 
-
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
-  Serial.println(" CONNECTED");
-  
-  server.begin();
+  connectHttp();
 
   connectBemfa();
 
