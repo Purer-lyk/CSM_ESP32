@@ -433,6 +433,7 @@ void httpCallback(){
     {
       while(client.available())     // read everything in data buffer
       {
+        
         char c = client.read();
         curr_string += c;
         Serial.print(c);
