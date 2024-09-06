@@ -14,7 +14,7 @@
 #define SAMPLE 16
 #define AUTOTIMES 50
 
-//巴法云连接超参数
+////巴法云连接超参数
 #define TCP_SERVER_ADDR "bemfa.com"
 #define TCP_SERVER_PORT 8344
 String TCP_UID = "19001126c7e745ff8ceee3da2f6ccebc";
@@ -28,21 +28,14 @@ IPAddress gateway(192,168,43,1);
 IPAddress subnet(255,255,255,0);
 WiFiServer server(80);
 
-///*vars for wifi connection and server*/
-//const char *ssid = "kircheis";
-//const char *password = "19921009";
-//String name="gas_det";
-//IPAddress staticIP(192,168,3,115);
-//IPAddress gateway(192,168,3,1);
-//IPAddress subnet(255,255,255,0);
-//WiFiServer server(80);
-
 String responseHeaders =
     String("") +
     "HTTP/1.1 200 OK\r\n" +
     "Content-Type: text/html\r\n" +
     "Connection: keep-alive\r\n" +
     "\r\n";
+
+//String wxHeaders = String("") + "Connection: keep-alive\r\n";
 
 String myhtmlPage = String("") +
     "<!DOCTYPE html>\n" +                                                                                                                                                                                                                                    
@@ -301,7 +294,6 @@ int cnt=0;
 unsigned char detec_sta=0;
 long data1[DATACOUNT],data2[DATACOUNT],data3[DATACOUNT],data4[DATACOUNT];
 unsigned char detc_cnt=0;
-WiFiClient bemfaclient;
 Ticker Vadj;
 Ticker detc;
 String curr_string = "";
@@ -363,64 +355,52 @@ void detec_ad(){
     detc_cnt++;
 }
 
-void sendTCPBemfa(const String &msg){
-  checkBemfa();
-  bemfaclient.print(msg);
-  Serial.println(msg);
-}
+//void sendTCPBemfa(const String &msg){
+//  checkBemfa();
+//  bemfaclient.print(msg);
+//  Serial.println(msg);
+//}
 
-void connectBemfa(){
-  Serial.println("connecting bemfa tcp");
-  if(bemfaclient.connect(TCP_SERVER_ADDR, TCP_SERVER_PORT)){
-    String tcpHeader = "";
-    tcpHeader = "cmd=1&uid=" + TCP_UID + "&topic=" + topic + "\r\n";
-    Serial.println(tcpHeader);
-    sendTCPBemfa(tcpHeader);
-    preConnected = true;
-    bemfaclient.setNoDelay(true); 
-  }
-  else{
-    bemfaclient.stop();
-    preConnected = false;
-  }
-  preStart = millis();
-}
+//void connectBemfa(){
+//  Serial.println("connecting bemfa tcp");
+//  if(bemfaclient.connect(TCP_SERVER_ADDR, atoi(TCP_SERVER_PORT))){
+//    String tcpHeader = "";
+//    tcpHeader = "cmd=1&uid=" + TCP_UID + "&topic=" + topic + "\r\n";
+//    Serial.println(tcpHeader);
+//    sendTCPBemfa(tcpHeader);
+//    preConnected = true;
+//    bemfaclient.setNoDelay(true); 
+//  }
+//  else{
+//    bemfaclient.stop();
+//    preConnected = false;
+//    Serial.println("connect failed");
+//  }
+//  preStart = millis();
+//}
 
-void connectHttp(){
-  WiFi.begin(ssid, password);
-  WiFi.config(staticIP, gateway, subnet);
+//void checkBemfa(){
+//  while(!bemfaclient.connected()){
+//    delay(500);
+//    Serial.println("client disconnect");
+//    if(preConnected == true){
+//      preConnected = false;
+//      preStart = millis();
+//      bemfaclient.stop();
+//    }
+//    else if(millis() - preStart > 1000) connectBemfa();
+//  }
+//}
 
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
-  Serial.println(" CONNECTED");
-  
-  server.begin();
-}
-
-void checkBemfa(){
-  while(!bemfaclient.connected()){
-    delay(500);
-    Serial.println("client disconnect");
-    if(preConnected == true){
-      preConnected = false;
-      preStart = millis();
-      bemfaclient.stop();
-    }
-    else if(millis() - preStart > 1000) connectBemfa();
-  }
-}
-
-void bemfaCallback(){
-  checkBemfa();
-  while(bemfaclient.available()){
-     char c = bemfaclient.read();
-     curr_string += c;
-  }
-  Serial.println("接收的消息为:" + curr_string);
-//  if(curr_string)
-}
+//void bemfaCallback(){
+//  checkBemfa();
+//  while(bemfaclient.available()){
+//     char c = bemfaclient.read();
+//     curr_string += c;
+//  }
+//  Serial.println("接收的消息为:" + curr_string);
+////  if(curr_string)
+//}
 
 void httpCallback(){
   //看似是esp32和网页端的数据互通，实际上是一种TCP通讯，ESP32作为TCP服务器端，浏览器发出对某一IP地址的请求，ESP32接收请求并响应对应的数据给浏览器进行展示。
@@ -433,11 +413,11 @@ void httpCallback(){
     {
       while(client.available())     // read everything in data buffer
       {
-        
         char c = client.read();
         curr_string += c;
-        Serial.print(c);
-      }  
+      }
+      Serial.println(curr_string);
+      //web part
       if(curr_string.startsWith("GET / HTTP/1.1"))
       {
         client.print(responseHeaders);
@@ -449,7 +429,7 @@ void httpCallback(){
         client.print(responseHeaders);
         client.print(myhtmlPage);
         client.print("\r\n"); 
-        singleSample(client);       
+        singleSample(client, false);       
       }
       else if(curr_string.startsWith("POST /Sensor1"))
       {
@@ -476,6 +456,23 @@ void httpCallback(){
         client.print(responseHeaders);
         client.print(myhtmlPage);
       }
+      //wx part
+      else if(curr_string.endsWith("Start")){
+        singleSample(client, true);
+        client.print(responseHeaders);
+        wxSensorData(client, data1, 1, cnt);
+        wxSensorData(client, data2, 2, cnt);
+        wxSensorData(client, data3, 3, cnt);
+        wxSensorData(client, data4, 4, cnt);
+      }
+      else if(curr_string.endsWith("Status")){
+        client.print(responseHeaders);
+        client.print("online");
+      }
+      else if(curr_string.endsWith("Auto")){
+        client.print(responseHeaders);
+        wxAutoSensor(client);
+      }
       curr_string = "";
     }
     client.stop();
@@ -497,9 +494,19 @@ void setup()
 
   Vadj.attach_ms(2,VOUT);  // loop VOUT+4 operator for every 2 millisecond
 
-  connectHttp();
+  WiFi.config(staticIP, gateway, subnet);
+  WiFi.begin(ssid, password);
+  
 
-  connectBemfa();
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+  }
+  Serial.println("CONNECTED");
+  
+  server.begin();
+
+//  connectBemfa();
 
   // Print the IP address
   Serial.print("Use this URL to connect: ");
@@ -513,7 +520,26 @@ void loop()
 {
   delay(1);
   httpCallback();
-  bemfaCallback();
+//  bemfaCallback();
+}
+
+void wxAutoSensor(WiFiClient _client){
+  for(int i=0;i<AUTOTIMES;i++){
+    delay(1000);
+    singleSample(_client, true);
+    wxSensorData(_client, data1, 1, cnt);
+    wxSensorData(_client, data2, 2, cnt);
+    wxSensorData(_client, data3, 3, cnt);
+    wxSensorData(_client, data4, 4, cnt);
+  }
+}
+
+void wxSensorData(WiFiClient _client, long *_data, int sensorNumber, int cnt_temp){
+  String datastr = String(sensorNumber) + "_" + cnt_temp + ",";
+  for(int i=0;i<DATACOUNT;i++){
+    datastr = datastr + String(_data[i]) + ",";
+  }
+  _client.print(datastr);
 }
 
 void handleSensorData(WiFiClient _client, long _data[], String sensorNumber, int cnt_temp) {
@@ -550,10 +576,10 @@ void handleSensorData(WiFiClient _client, long _data[], String sensorNumber, int
         _client.print("\r\n");
 }
 
-void singleSample(WiFiClient _client){
+void singleSample(WiFiClient _client, bool iswx){
   //增加计数
   cnt++;
-  _client.print(sampleAdd);
+  if(!iswx) _client.print(sampleAdd);
 
   
   Vout_adj=VOUTSTART;
@@ -594,8 +620,8 @@ String showData(int sensor, int cnt_t){
 
 void autoSample(WiFiClient _client){
   for(int i=0;i<AUTOTIMES;i++){
-    delay(50);
-    singleSample(_client);
+    delay(1000);
+    singleSample(_client, false);
     autoSensor(_client, data1, 1, cnt);
     autoSensor(_client, data2, 2, cnt);
     autoSensor(_client, data3, 3, cnt);
