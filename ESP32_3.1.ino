@@ -14,12 +14,6 @@
 #define SAMPLE 16
 #define AUTOTIMES 50
 
-////巴法云连接超参数
-#define TCP_SERVER_ADDR "bemfa.com"
-#define TCP_SERVER_PORT 8344
-String TCP_UID = "19001126c7e745ff8ceee3da2f6ccebc";
-String topic = "smell";
-
 /*vars for wifi connection and server*/
 const char *ssid = "HONOR 30S";
 const char *password = "lyl33333333";
@@ -355,53 +349,6 @@ void detec_ad(){
     detc_cnt++;
 }
 
-//void sendTCPBemfa(const String &msg){
-//  checkBemfa();
-//  bemfaclient.print(msg);
-//  Serial.println(msg);
-//}
-
-//void connectBemfa(){
-//  Serial.println("connecting bemfa tcp");
-//  if(bemfaclient.connect(TCP_SERVER_ADDR, atoi(TCP_SERVER_PORT))){
-//    String tcpHeader = "";
-//    tcpHeader = "cmd=1&uid=" + TCP_UID + "&topic=" + topic + "\r\n";
-//    Serial.println(tcpHeader);
-//    sendTCPBemfa(tcpHeader);
-//    preConnected = true;
-//    bemfaclient.setNoDelay(true); 
-//  }
-//  else{
-//    bemfaclient.stop();
-//    preConnected = false;
-//    Serial.println("connect failed");
-//  }
-//  preStart = millis();
-//}
-
-//void checkBemfa(){
-//  while(!bemfaclient.connected()){
-//    delay(500);
-//    Serial.println("client disconnect");
-//    if(preConnected == true){
-//      preConnected = false;
-//      preStart = millis();
-//      bemfaclient.stop();
-//    }
-//    else if(millis() - preStart > 1000) connectBemfa();
-//  }
-//}
-
-//void bemfaCallback(){
-//  checkBemfa();
-//  while(bemfaclient.available()){
-//     char c = bemfaclient.read();
-//     curr_string += c;
-//  }
-//  Serial.println("接收的消息为:" + curr_string);
-////  if(curr_string)
-//}
-
 void httpCallback(){
   //看似是esp32和网页端的数据互通，实际上是一种TCP通讯，ESP32作为TCP服务器端，浏览器发出对某一IP地址的请求，ESP32接收请求并响应对应的数据给浏览器进行展示。
   //故要解决自动采集数据并上传网页端，必须换种网页端的实现。
@@ -469,10 +416,6 @@ void httpCallback(){
         client.print(responseHeaders);
         client.print("online");
       }
-      else if(curr_string.endsWith("Auto")){
-        client.print(responseHeaders);
-        wxAutoSensor(client);
-      }
       curr_string = "";
     }
     client.stop();
@@ -506,32 +449,17 @@ void setup()
   
   server.begin();
 
-//  connectBemfa();
-
   // Print the IP address
   Serial.print("Use this URL to connect: ");
   Serial.print("http://");
   Serial.print(WiFi.localIP());
   Serial.println("/");
-
 }
 
 void loop()
 {
   delay(1);
   httpCallback();
-//  bemfaCallback();
-}
-
-void wxAutoSensor(WiFiClient _client){
-  for(int i=0;i<AUTOTIMES;i++){
-    delay(1000);
-    singleSample(_client, true);
-    wxSensorData(_client, data1, 1, cnt);
-    wxSensorData(_client, data2, 2, cnt);
-    wxSensorData(_client, data3, 3, cnt);
-    wxSensorData(_client, data4, 4, cnt);
-  }
 }
 
 void wxSensorData(WiFiClient _client, long *_data, int sensorNumber, int cnt_temp){
