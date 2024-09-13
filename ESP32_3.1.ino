@@ -308,25 +308,23 @@ String curr_string = "";
 
 // VOUT() used to heat sensor
 void VOUT(){
-  unsigned char dataH, dataL;
   // SPI_MODE1在上升沿时改变SPI输出数据，下降沿时采样数据
   // pin15负责时钟同步发送准备帧，即上升沿
   // pin18负责处理时钟同步
   digitalWrite(15, LOW);
-  delayMicroseconds(10);
-  //SPI.write(dataH);
-  //SPI.write(dataL);
+//  delayMicroseconds(10);
   // pin23负责发送SPI数据
   // 9830代表了从3V开始取高12位
   // 16370代表了5V取高12位对应4095
   // MEMS加热电压1.8V就不能给到5V？TGS2602是5V的加热电压
   if(detec_sta==2){
-    Vout_adj=Vout_adj+16;
+    Serial.println(Vout_adj);
+    Vout_adj=Vout_adj+64;
     SPI.write16(Vout_adj);
   }else{
     SPI.write16(VOUTSTART);
   }
-  delayMicroseconds(10);
+//  delayMicroseconds(10);
   digitalWrite(15, HIGH);
 }
 
@@ -375,7 +373,7 @@ void httpCallback(){
         char c = client.read();
         curr_string += c;
       }
-      Serial.println(curr_string);
+//      Serial.println(curr_string);
       //web part
       if(curr_string.startsWith("GET / HTTP/1.1"))
       {
@@ -537,20 +535,21 @@ void singleSample(WiFiClient _client, bool iswx){
   Vout_adj=VOUTSTART;
   detec_sta=1;
   digitalWrite(LED2,HIGH);
-  while(1){
-    if(detec_sta==1){
-      detc.attach_ms(SAMPLE,detec_ad);
-      detec_sta=2;
-      detc_cnt=0;
-    }
-    if(Vout_adj>=VOUTEND){
-      detc.detach();
-      if(detec_sta==2){
-        detec_sta=3;
-        digitalWrite(LED2,LOW);
-      }
-      break;
-    }
+  if(detec_sta==1){
+//    detc.attach_ms(SAMPLE,detec_ad);
+    detec_sta=2;
+    detc_cnt=0;
+  }
+  while(Vout_adj <= VOUTEND){
+    delayMicroseconds(1000);
+    detec_ad();
+//    Serial.println("min");
+  }
+    
+  detc.detach();
+  if(detec_sta==2){
+    detec_sta=3;
+    digitalWrite(LED2,LOW);
   }
 }
 
