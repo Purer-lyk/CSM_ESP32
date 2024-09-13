@@ -9,10 +9,10 @@
 //数据采集超参数
 #define LED2 2
 #define DATACOUNT 144
-#define VOUTSTART 1636
-#define VOUTEND 6552
-#define SAMPLE 16
-#define AUTOTIMES 50
+#define VOUTSTART 4194
+#define VOUTEND 9834
+#define SAMPLE 4
+#define AUTOTIMES 30
 
 /*vars for wifi connection and server*/
 const char *ssid = "HONOR 30S";
@@ -56,10 +56,10 @@ String myhtmlPage = String("") +
     "      </table>\n" +                                                                                                                                                                                                                                      
     "   </form>\n" +                                                                                                                                                                                                                                          
     "     <table align=\"center\"><tr>\n" +                                                                                                                                                                                                                    
-    "     <td><form method=\"post\"action=\"Sensor1\"><button name=\"sensor1\"type=\"submit\"value=\"1\"id=\"1\" style=\"width:140px;height:20px\">NO.1 sensor data</button></form></td>\n" +                                                                                                            
-    "     <td><form method=\"post\"action=\"Sensor2\"><button name=\"sensor2\"type=\"submit\"value=\"2\"id=\"2\" style=\"width:140px;height:20px\">NO.2 sensor data</button></form></td>\n" +                                                                                                            
-    "     <td><form method=\"post\"action=\"Sensor3\"><button name=\"sensor3\"type=\"submit\"value=\"3\"id=\"3\" style=\"width:140px;height:20px\">NO.3 sensor data</button></form></td>\n" +                                                                                                            
-    "     <td><form method=\"post\"action=\"Sensor4\"><button name=\"sensor4\"type=\"submit\"value=\"4\"id=\"4\" style=\"width:140px;height:20px\">NO.4 sensor data</button></form></td>\n" +                                                                                                            
+    "     <td><button name=\"sensor1\"type=\"submit\"value=\"1\"id=\"1\" style=\"width:140px;height:20px\"onclick = \"LineChart.plotdata(1)\">NO.1 sensor data</button></td>\n" +                                                                                                            
+    "     <td><button name=\"sensor2\"type=\"submit\"value=\"2\"id=\"2\" style=\"width:140px;height:20px\"onclick = \"LineChart.plotdata(2)\">NO.2 sensor data</button></td>\n" +                                                                                                            
+    "     <td><button name=\"sensor3\"type=\"submit\"value=\"3\"id=\"3\" style=\"width:140px;height:20px\"onclick = \"LineChart.plotdata(3)\">NO.3 sensor data</button></td>\n" +                                                                                                            
+    "     <td><button name=\"sensor4\"type=\"submit\"value=\"4\"id=\"4\" style=\"width:140px;height:20px\"onclick = \"LineChart.plotdata(4)\">NO.4 sensor data</button></td>\n" +                                                                                                            
     "   </tr></table>\n" +   
     "<table align=\"center\">\n" +
     "    <tr>\n" +
@@ -82,7 +82,8 @@ String myhtmlPage = String("") +
     "     <td><button onclick=\"save_data(3)\">save sensor3 data</button></td>\n" +
     "     <td><button onclick=\"save_data(4)\">save sensor4 data</button></td>\n" +
     "</tr></table>\n" +                                                                                                                                                                                                                                          
-    "   <script>\n" +                                                                                                                                                                                                                                         
+    "   <script>\n" +       
+    "     let data1=[], data2=[], data3=[], data4=[];\n" +                                                                                                                                                                                                                                  
     "     var LineChart = function() {\n" +                                                                                                                                                                                                                    
     "       this.ctx = drawing.getContext(\"2d\");\n" +                                                                                                                                                                                                         
     "       this.cWidth = this.ctx.canvas.width;\n" +                                                                                                                                                                                                           
@@ -157,8 +158,7 @@ String myhtmlPage = String("") +
     "       this.ctx.beginPath();\n" +                                                                                                                                                                                                                          
     "       this.ctx.strokeStyle = \"#ddd\";\n" +                                                                                                                                                                                                               
     "       this.ctx.lineWidth = this.gridWidth;\n" +                                                                                                                                                                                                           
-    "       this.ctx.font = \"15px Arial\";\n" +                                                                                                                                                                                                                
-    "                                   \n" +                                                                                                                                                                                                                
+    "       this.ctx.font = \"15px Arial\";\n" +                                                                                                                                                                                                                                                                                                                                                                                                                               
     "       i = 0;\n" +                                                                                                                                                                                                                                         
     "       var xtick = 0;\n" +                                                                                                                                                                                                                                 
     "       while((this.originWidth + i * this.XgridMargin) <= (this.cWidth - this.widthMargin - this.arrowWidth)) {\n" +                                                                                                                                       
@@ -171,7 +171,16 @@ String myhtmlPage = String("") +
     "       }\n" +                                                                                                                                                                                                                                              
     "       this.ctx.stroke();\n" +                                                                                                                                                                                                                             
     "     }\n" +                                                                                                                                                                                                                                               
-    "     LineChart.prototype.plotdata = function(data, index) {\n" + 
+    "     LineChart.prototype.plotdata = function(index) {\n" + 
+    "       LineChart.init();\n" + 
+    "       let data;\n" +
+    "       switch(index){\n" +
+    "           case 1: data=data1;break;\n" +
+    "           case 2: data=data2;break;\n" +
+    "           case 3: data=data3;break;\n" +
+    "           case 4: data=data4;break;\n" +
+    "           break;\n" +
+    "       }\n" +
     "       data_height = this.originHeight - data[0] / 200000 * (this.cHeight - 2 * this.heightMargin - this.arrowWidth);\n" + 
     "       data_width = this.originWidth;\n" + 
     "       this.ctx.beginPath();\n" + 
@@ -190,11 +199,12 @@ String myhtmlPage = String("") +
     "         this.ctx.lineTo(data_width,data_height);\n" +
     "       }\n" +
     "       this.ctx.stroke();\n" +
+    "       var arrayElement = document.getElementById('showId');\n" +
+    "       arrayElement.innerHTML = `${data.join(', ')}`;\n" +
     "     }\n" +                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
     "       \n" +                                                                                                                                                                                                                                            
     "     var LineChart = new LineChart();\n" +                                                                                                                                                                                                                
-    "     LineChart.init();\n" +                                                                                                                                                                                                                               
-    "                    \n" +                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    "     LineChart.init();\n" +                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
     "   </script>\n" +    
     "<script>\n" +
     "function save_data(index)\n" +
@@ -233,6 +243,7 @@ String myhtmlPage = String("") +
     "}\n" +
     "</script>\n" +                                                                                                                                                                                                                                    
     " </body>\n" +
+    "<div id=\"showId\"></div>\n" +
     "</html>\n";
 
 String autopage = String("") +
@@ -281,6 +292,9 @@ String sampleAdd = String("") +
 "else{\n"
 "      sessionStorage.setItem('sample_counter', parseInt(sess_counter)+1);\n" +
 "}\n" +
+"var sess_counter = sessionStorage.getItem('sample_counter');\n" +
+"var counter = document.getElementById('count_div');\n" +
+"if(counter) counter.textContent = sess_counter;\n" +
 "</script>\n";
 
 int Vout_adj=0;
@@ -291,8 +305,6 @@ unsigned char detc_cnt=0;
 Ticker Vadj;
 Ticker detc;
 String curr_string = "";
-bool preConnected = false;
-unsigned long preStart = millis();
 
 // VOUT() used to heat sensor
 void VOUT(){
@@ -301,7 +313,7 @@ void VOUT(){
   // pin15负责时钟同步发送准备帧，即上升沿
   // pin18负责处理时钟同步
   digitalWrite(15, LOW);
-  delayMicroseconds(20);
+  delayMicroseconds(10);
   //SPI.write(dataH);
   //SPI.write(dataL);
   // pin23负责发送SPI数据
@@ -309,12 +321,12 @@ void VOUT(){
   // 16370代表了5V取高12位对应4095
   // MEMS加热电压1.8V就不能给到5V？TGS2602是5V的加热电压
   if(detec_sta==2){
-    Vout_adj=Vout_adj+4;
+    Vout_adj=Vout_adj+16;
     SPI.write16(Vout_adj);
   }else{
     SPI.write16(VOUTSTART);
   }
-  delayMicroseconds(20);
+  delayMicroseconds(10);
   digitalWrite(15, HIGH);
 }
 
@@ -375,25 +387,29 @@ void httpCallback(){
       {
         client.print(responseHeaders);
         client.print(myhtmlPage);
-        client.print("\r\n"); 
-        singleSample(client, false);       
-      }
-      else if(curr_string.startsWith("POST /Sensor1"))
-      {
+        singleSample(client, false);
+//        client.print("\r\n"); 
         handleSensorData(client, data1, "1", cnt);
-      }
-      else if(curr_string.startsWith("POST /Sensor2"))
-      {
         handleSensorData(client, data2, "2", cnt);
-      }
-      else if(curr_string.startsWith("POST /Sensor3"))
-      {
         handleSensorData(client, data3, "3", cnt);
-      }
-      else if(curr_string.startsWith("POST /Sensor4"))
-      {
         handleSensorData(client, data4, "4", cnt);
       }
+//      else if(curr_string.startsWith("POST /Sensor1"))
+//      {
+//        handleSensorData(client, data1, "1", cnt);
+//      }
+//      else if(curr_string.startsWith("POST /Sensor2"))
+//      {
+//        handleSensorData(client, data2, "2", cnt);
+//      }
+//      else if(curr_string.startsWith("POST /Sensor3"))
+//      {
+//        handleSensorData(client, data3, "3", cnt);
+//      }
+//      else if(curr_string.startsWith("POST /Sensor4"))
+//      {
+//        handleSensorData(client, data4, "4", cnt);
+//      }
       else if(curr_string.startsWith("POST /autoMode")){
         client.print(responseHeaders);
         client.print(autopage);
@@ -435,12 +451,11 @@ void setup()
   digitalWrite(15, HIGH);
   digitalWrite(LED2, LOW);
 
-  Vadj.attach_ms(2,VOUT);  // loop VOUT+4 operator for every 2 millisecond
+  Vadj.attach_ms(2,VOUT);  // loop VOUT+8 operator for every 2 millisecond
 
   WiFi.config(staticIP, gateway, subnet);
   WiFi.begin(ssid, password);
   
-
   while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
@@ -471,36 +486,46 @@ void wxSensorData(WiFiClient _client, long *_data, int sensorNumber, int cnt_tem
 }
 
 void handleSensorData(WiFiClient _client, long _data[], String sensorNumber, int cnt_temp) {
-        _client.print(responseHeaders);
-        _client.print(myhtmlPage);
-        //作图
+//        _client.print(responseHeaders);
+//        _client.print(myhtmlPage);
+        //获取数据
         _client.print("<script>\n");
-        _client.print("var data = new Array(");
+        _client.print("data");
+        _client.print(sensorNumber);
+        _client.print("=new Array(");
         _client.print(DATACOUNT);
         _client.print(");\n");
         for(unsigned char det_cnt=0;det_cnt<DATACOUNT;det_cnt++){
-          _client.print("data[");
+          _client.print("data");
+          _client.print(sensorNumber);
+          _client.print("[");
           _client.print(det_cnt);
           _client.print("]=");
           _client.print(_data[det_cnt]);
           _client.print(";\n");
         }
-        _client.print("LineChart.plotdata(data," + sensorNumber + ");\n");
+        //作图
+//        _client.print("LineChart.plotdata(data," + sensorNumber + ");\n");
         //将数据缓存到sessionStorage上用以保存到本地
         _client.print("sessionStorage.setItem(\"" + sensorNumber + "_\"+'");
         _client.print(cnt_temp);
-        _client.print("', data);\n");
-//        _client.print("var counter = document.getElementById('count_div');\n");
-//        _client.print("counter.textContent = String(parseInt(counter.textContent)+1);\n");
+        _client.print("', data");
+        _client.print(sensorNumber);
+        _client.print(");\n");
         _client.print("</script>\n");
         _client.print("\r\n");
         //文本数据
-        _client.print("<div1>");
+        _client.print("<div");
+        _client.print(sensorNumber);
+        _client.print(" hidden>");
         for(unsigned char det_cnt=0;det_cnt<DATACOUNT;det_cnt++){
           _client.print(_data[det_cnt]);
-          _client.print(",\n");
+          if(det_cnt==DATACOUNT-1) break;
+          _client.print(", ");
         }
-        _client.print("</div1>");
+        _client.print("</div");
+        _client.print(sensorNumber);
+        _client.print(">");
         _client.print("\r\n");
 }
 
@@ -509,7 +534,6 @@ void singleSample(WiFiClient _client, bool iswx){
   cnt++;
   if(!iswx) _client.print(sampleAdd);
 
-  
   Vout_adj=VOUTSTART;
   detec_sta=1;
   digitalWrite(LED2,HIGH);
@@ -530,6 +554,7 @@ void singleSample(WiFiClient _client, bool iswx){
   }
 }
 
+//网页端自动采集部分
 String showData(int sensor, int cnt_t){
   String res = String("") + 
   "var tableBody = document.getElementById('data-table');\n" +
