@@ -319,7 +319,7 @@ void VOUT(){
   // MEMS加热电压1.8V就不能给到5V？TGS2602是5V的加热电压
   if(detec_sta==2){
 //    Serial.println(Vout_adj);
-    Vout_adj=Vout_adj+64;
+    Vout_adj=Vout_adj+32;
     SPI.write16(Vout_adj);
     detec_ad();
   }else{
@@ -347,7 +347,7 @@ long det_sensor(unsigned char j){
     case 4: io = 35;  break;
     default:  break;
   }
-  for(int i=0;i<22;i++){
+  for(int i=0;i<20;i++){
     detec_tmp+=analogRead(io);
   }
   return detec_tmp;
