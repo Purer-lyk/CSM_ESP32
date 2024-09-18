@@ -319,9 +319,9 @@ void VOUT(){
   // MEMS加热电压1.8V就不能给到5V？TGS2602是5V的加热电压
   if(detec_sta==2){
 //    Serial.println(Vout_adj);
-    detec_ad();
     Vout_adj=Vout_adj+64;
     SPI.write16(Vout_adj);
+    detec_ad();
   }else{
     Vout_adj = VOUTSTART;
     SPI.write16(VOUTSTART);
@@ -339,14 +339,16 @@ long det_sensor(unsigned char j){
   // 电阻 = U/I = (3.3-(number/4095)*3.3)/(number*3.3/(4095*10^4))
   // 10KΩ是最优的电阻根据传感器测量电阻
   // 读取100次ADC数据值？更加精确的获取测量的电压值？
-  for (int i=0;i<100;i++){
-    switch(j){
-      case 1: detec_tmp+=analogRead(36);  break;
-      case 2: detec_tmp+=analogRead(39);  break;
-      case 3: detec_tmp+=analogRead(34);  break;
-      case 4: detec_tmp+=analogRead(35);  break;
-      default:  break;
-    }
+  int io=0;
+  switch(j){
+    case 1: io = 36;  break;
+    case 2: io = 39;  break;
+    case 3: io = 34;  break;
+    case 4: io = 35;  break;
+    default:  break;
+  }
+  for(int i=0;i<22;i++){
+    detec_tmp+=analogRead(io);
   }
   return detec_tmp;
 }
