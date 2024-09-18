@@ -318,10 +318,12 @@ void VOUT(){
   // 16370代表了5V取高12位对应4095
   // MEMS加热电压1.8V就不能给到5V？TGS2602是5V的加热电压
   if(detec_sta==2){
-    Serial.println(Vout_adj);
+//    Serial.println(Vout_adj);
+    detec_ad();
     Vout_adj=Vout_adj+64;
     SPI.write16(Vout_adj);
   }else{
+    Vout_adj = VOUTSTART;
     SPI.write16(VOUTSTART);
   }
 //  delayMicroseconds(10);
@@ -541,12 +543,11 @@ void singleSample(WiFiClient _client, bool iswx){
     detc_cnt=0;
   }
   while(Vout_adj <= VOUTEND){
-    delayMicroseconds(1000);
-    detec_ad();
+    delayMicroseconds(10);
 //    Serial.println("min");
   }
     
-  detc.detach();
+//  detc.detach();
   if(detec_sta==2){
     detec_sta=3;
     digitalWrite(LED2,LOW);
