@@ -9,8 +9,8 @@
 //数据采集超参数
 #define LED2 2
 #define DATACOUNT 144
-#define VOUTSTART 4194
-#define VOUTEND 9834
+#define VOUTSTART 1638
+#define VOUTEND 6552
 #define SAMPLE 4
 #define AUTOTIMES 30
 
